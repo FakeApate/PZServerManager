@@ -1,0 +1,56 @@
+services:
+  pzserver:
+    build: .
+    image: localhost/pzserver:latest
+    container_name: pzserver
+    restart: unless-stopped
+    stop_grace_period: 60s
+    ports:
+      - "16261:16261/udp"
+      - "16262:16262/udp"
+      - "27015:27015/tcp"
+    volumes:
+      - pz-zomboid:/home/steam/Zomboid
+      - pz-steamapps:/opt/pzserver/steamapps  
+      - ./servertest.ini:/home/steam/Zomboid/Server/servertest.ini:ro,z
+
+  pzsm:                                                                              
+    build:                                                                           
+      context: ../pzsm
+      dockerfile: Dockerfile
+    image: localhost/pzsm:latest                                                     
+    container_name: pzsm
+    restart: unless-stopped                                                          
+    stop_grace_period: 10s                            
+    depends_on:
+      - pzserver                                                                     
+    expose:
+      - "8080"                                                              
+    volumes:                                          
+      - ./pzsm/config.yaml:/etc/pzsm/config.yaml:rw,z
+      - ./pzsm.db:/var/lib/pzsm/pzsm.db:rw,z
+      - pzsm-data:/var/lib/pzsm
+      - ./servertest.ini:/var/lib/pzsm/servertest.ini:rw,z  
+
+  pzsmui:                                                                            
+    build:                                            
+      context: ../pzsmui
+      dockerfile: Dockerfile                                                         
+    image: localhost/pzsmui:latest
+    container_name: pzsmui                                                           
+    restart: unless-stopped                           
+    depends_on:
+      - pzsm
+    cpu_shares: 256
+    mem_limit: 128m
+    oom_score_adj: 500
+    expose:
+      - "80"
+    ports:
+     - 5173:80
+
+volumes:                                                                      
+  pz-zomboid:   
+  pz-steamapps:                                                               
+  pzsm-data:                                                                  
+

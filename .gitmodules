@@ -1,0 +1,6 @@
+[submodule "pzsm"]
+	path = pzsm
+	url = git@github.com:FakeApate/pzsm.git
+[submodule "pzsmui"]
+	path = pzsmui
+	url = git@github.com:FakeApate/pzsmui.git
