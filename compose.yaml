@@ -1,56 +1,50 @@
 services:
   pzserver:
     build:
-      context: ./pzserver/
+      context: ./pzserver
       dockerfile: Dockerfile
-    image: localhost/pzserver:latest
     container_name: pzserver
+    image: localhost/pzserver:latest
+    ports:
+    - 16261:16261/udp
+    - 16262:16262/udp
+    - 27015:27015/tcp
     restart: unless-stopped
     stop_grace_period: 60s
-    ports:
-      - "16261:16261/udp"
-      - "16262:16262/udp"
-      - "27015:27015/tcp"
     volumes:
-      - pz-zomboid:/home/steam/Zomboid
-      - pz-steamapps:/opt/pzserver/steamapps
-      - ./servertest.ini:/home/steam/Zomboid/Server/servertest.ini:ro,z
-
+    - pz-zomboid:/home/steam/Zomboid
+    - pz-steamapps:/opt/pzserver/steamapps
+    - ./servertest.ini:/home/steam/Zomboid/Server/servertest.ini:ro,z
   pzsm:
     build:
-      context: ./pzsm/
+      context: ./pzsm
       dockerfile: Dockerfile
-    image: localhost/pzsm:latest
     container_name: pzsm
+    depends_on:
+      pzserver:
+        condition: service_started
+    expose:
+    - '8080'
+    image: localhost/pzsm:latest
     restart: unless-stopped
     stop_grace_period: 10s
-    depends_on:
-      - pzserver
-    expose:
-      - "8080"
     volumes:
-      - pz-zomboid:/var/lib/pzserver
-      - ./pzsm/config.yaml:/etc/pzsm/config.yaml:rw,z
-      - ./pzsm.db:/var/lib/pzsm/pzsm.db:rw,z
-      - pzsm-data:/var/lib/pzsm
-      - ./servertest.ini:/var/lib/pzsm/servertest.ini:rw,z
-
+    - pz-zomboid:/var/lib/pzserver
+    - ./pzsm/config.yaml:/etc/pzsm/config.yaml:rw,z
+    - ./pzsm.db:/var/lib/pzsm/pzsm.db:rw,z
+    - ./servertest.ini:/var/lib/pzsm/servertest.ini:rw,z
   pzsmui:
     build:
-      context: ./pzsmui/
+      context: ./pzsmui
       dockerfile: Dockerfile
-    image: localhost/pzsmui:latest
     container_name: pzsmui
-    restart: unless-stopped
     depends_on:
-      - pzsm
+      pzsm:
+        condition: service_started
     expose:
-      - "80"
-    ports:
-     - 5173:80
-
+    - '80'
+    image: localhost/pzsmui:latest
+    restart: unless-stopped
 volumes:
-  pz-zomboid:
-  pz-steamapps:
-  pzsm-data:
-
+  pz-steamapps: null
+  pz-zomboid: null
